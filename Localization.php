@@ -213,29 +213,27 @@ class Localization
         return $this->baseUrl . $uri;
     }
 
-    protected function unparseUrl($parsed_url)
+    public function getURLFromRouteNameTranslated($locale, $transKeyName)
     {
-        if (empty($parsed_url)) {
-            return '';
+        if (is_null($locale) || !is_string($locale)) {
+            $locale = $this->getCurrentLocale();
         }
 
-        $url = '';
-        $url .= isset($parsed_url['scheme']) ? $parsed_url['scheme'].'://' : '';
-        $url .= $parsed_url['host'] ?? '';
-        $url .= isset($parsed_url['port']) ? ':'.$parsed_url['port'] : '';
-        $user = $parsed_url['user'] ?? '';
-        $pass = isset($parsed_url['pass']) ? ':'.$parsed_url['pass'] : '';
-        $url .= $user.(($user || $pass) ? "$pass@" : '');
-
-        if (!empty($url)) {
-            $url .= isset($parsed_url['path']) ? '/'.ltrim($parsed_url['path'], '/') : '';
-        } else {
-            $url .= $parsed_url['path'] ?? '';
+        if (!$this->isLocaleSupported($locale)) {
+            throw new UnsupportedLocaleException('Locale \''.$locale.'\' is not in the list of supported locales.');
         }
 
-        $url .= isset($parsed_url['query']) ? '?'.$parsed_url['query'] : '';
-        $url .= isset($parsed_url['fragment']) ? '#'.$parsed_url['fragment'] : '';
+        $route = '/' . $locale;
 
-        return $url;
+        if (is_string($locale) && $this->translator->has($transKeyName, $locale)) {
+            $translation = $this->translator->get($transKeyName, [], $locale);
+            $route .= '/' . $translation;
+        }
+
+        if (empty($route)) {
+            return false;
+        }
+
+        return rtrim($this->createUrlFromUri($route), '/');
     }
 }
