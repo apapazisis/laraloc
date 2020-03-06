@@ -1,0 +1,2 @@
+# laraloc
+Laravel Route Localization
